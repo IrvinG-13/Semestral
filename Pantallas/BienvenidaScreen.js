@@ -1,0 +1,51 @@
+import { Text, View, StyleSheet, TouchableOpacity,ImageBackground } from 'react-native';
+
+export default function BienvenidaScreen({ navigation }) {
+  return (
+    <ImageBackground
+      source={require('../assets/Fondo.jpeg')}
+      style={styles.fondo}
+      resizeMode="cover"
+    >
+      <View style={styles.capa}>
+        <Text style={styles.titulo}>Bienvenid@</Text>
+
+        <TouchableOpacity
+          style={styles.boton}
+          onPress={() => navigation.replace('Principal')}
+        >
+          <Text style={styles.textoBoton}>Entrar</Text>
+        </TouchableOpacity>
+      </View>
+    </ImageBackground>
+  );
+}
+
+const styles = StyleSheet.create({
+  fondo: {
+    flex: 1,
+  },
+  capa: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(0,0,0,0.4)',
+  },
+  titulo: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: 'white',
+    marginBottom: 30,
+  },
+  boton: {
+    backgroundColor: '#FFAE00',
+    paddingVertical: 12,
+    paddingHorizontal: 35,
+    borderRadius: 8,
+  },
+  textoBoton: {
+    color: 'white',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+});

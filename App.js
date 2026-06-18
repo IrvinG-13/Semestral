@@ -1,90 +1,103 @@
-import { Text, View, StyleSheet } from 'react-native';
+import { useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-import { useEffect } from 'react';
-import { useAudioPlayer, useAudioPlayerStatus, setAudioModeAsync } from 'expo-audio';
 
-function InicioScreen() {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.titulo}>Inicio</Text>
-    </View>
-  );
-}
-
-function AudioScreen() {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.titulo}>Audio</Text>
-    </View>
-  );
-}
-
-function PerfilScreen() {
-  return (
-    <View style={styles.container}>
-      <Text style={styles.titulo}>Perfil</Text>
-    </View>
-  );
-}
+import BienvenidaScreen from './Pantallas/BienvenidaScreen';
+import InicioScreen from './Pantallas/InicioScreen';
+import AudioScreen from './Pantallas/AudioScreen';
+import NombreScreen from './Pantallas/NombreScreen';
 
 const Tab = createBottomTabNavigator();
+const Stack = createNativeStackNavigator();
+
+function TabsPrincipales() {
+  const [habitatSeleccionado, setHabitatSeleccionado] = useState(null);
+
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName = 'ellipse';
+
+          if (route.name === 'Inicio') {
+            iconName = focused ? 'home' : 'home-outline';
+          } else if (route.name === 'Audio') {
+            iconName = focused ? 'volume-high' : 'volume-high-outline';
+          } else if (route.name === 'Nombre') {
+            iconName = focused ? 'create' : 'create-outline';
+          }
+
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+
+        tabBarActiveTintColor: 'green',
+        tabBarInactiveTintColor: 'gray',
+
+        headerStyle: {
+          backgroundColor: 'black',
+        },
+        headerTintColor: 'white',
+
+        tabBarStyle: {
+          backgroundColor: 'white',
+          height: 60,
+          paddingBottom: 6,
+        },
+
+        tabBarLabelStyle: {
+          fontSize: 12,
+        },
+      })}
+    >
+      <Tab.Screen name="Inicio">
+        {(props) => (
+          <InicioScreen
+            {...props}
+            habitatSeleccionado={habitatSeleccionado}
+            setHabitatSeleccionado={setHabitatSeleccionado}
+          />
+        )}
+      </Tab.Screen>
+
+      <Tab.Screen name="Audio">
+        {(props) => (
+          <AudioScreen
+            {...props}
+            habitatSeleccionado={habitatSeleccionado}
+          />
+        )}
+      </Tab.Screen>
+
+      <Tab.Screen name="Nombre">
+        {(props) => (
+          <NombreScreen
+            {...props}
+            habitatSeleccionado={habitatSeleccionado}
+          />
+        )}
+      </Tab.Screen>
+    </Tab.Navigator>
+  );
+}
 
 export default function App() {
   return (
     <NavigationContainer>
-      <Tab.Navigator
-        screenOptions={({ route }) => ({
-          tabBarIcon: ({ focused, color, size }) => {
-            let iconName;
+      <Stack.Navigator initialRouteName="Bienvenida">
+        <Stack.Screen
+          name="Bienvenida"
+          component={BienvenidaScreen}
+          options={{ headerShown: false }}
+        />
 
-            if (route.name === 'Inicio') {
-              iconName = focused ? 'home' : 'home-outline';
-            } else if (route.name === 'Audio') {
-              iconName = focused ? 'musical-notes' : 'musical-notes-outline';
-            } else if (route.name === 'Perfil') {
-              iconName = focused ? 'person' : 'person-outline';
-            }
-
-            return <Ionicons name={iconName} size={size} color={color} />;
-          },
-
-          tabBarActiveTintColor: 'blue',
-          tabBarInactiveTintColor: 'gray',
-
-          headerStyle: {
-            backgroundColor: 'black',
-          },
-          headerTintColor: 'white',
-
-          tabBarStyle: {
-            backgroundColor: 'white',
-            height: 60,
-            paddingBottom: 6,
-          },
-
-          tabBarLabelStyle: {
-            fontSize: 12,
-          },
-        })}
-      >
-        <Tab.Screen name="Inicio" component={InicioScreen} />
-        <Tab.Screen name="Audio" component={AudioScreen} />
-        <Tab.Screen name="Perfil" component={PerfilScreen} />
-      </Tab.Navigator>
+        <Stack.Screen
+          name="Principal"
+          component={TabsPrincipales}
+          options={{ headerShown: false }}
+        />
+      </Stack.Navigator>
     </NavigationContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center'
-  },
-  titulo: {
-    fontSize: 24,
-    fontWeight: 'bold'
-  }
-});
