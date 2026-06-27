@@ -3,18 +3,17 @@ import { Text, View, StyleSheet, TouchableOpacity,ImageBackground } from 'react-
 export default function BienvenidaScreen({ navigation }) {
   return (
     <ImageBackground
-      source={require('../assets/Fondo.jpeg')}
+      source={require('../assets/Fondo.png')}
       style={styles.fondo}
       resizeMode="cover"
     >
       <View style={styles.capa}>
-        <Text style={styles.titulo}>Bienvenid@</Text>
 
         <TouchableOpacity
           style={styles.boton}
           onPress={() => navigation.replace('Principal')}
         >
-          <Text style={styles.textoBoton}>Entrar</Text>
+          <Text style={styles.textoBoton}>JUGAR</Text>
         </TouchableOpacity>
       </View>
     </ImageBackground>
@@ -28,8 +27,9 @@ const styles = StyleSheet.create({
   capa: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-end',
     backgroundColor: 'rgba(0,0,0,0.4)',
+    paddingBottom: 80,
   },
   titulo: {
     fontSize: 28,
