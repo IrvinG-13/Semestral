@@ -3,11 +3,13 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import BienvenidaScreen from './Pantallas/BienvenidaScreen';
 import InicioScreen from './Pantallas/InicioScreen';
 import AudioScreen from './Pantallas/AudioScreen';
 import NombreScreen from './Pantallas/NombreScreen';
+import ColorearScreen from './Pantallas/ColorearScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -15,11 +17,16 @@ const Stack = createNativeStackNavigator();
 function TabsPrincipales() {
   const [habitatSeleccionado, setHabitatSeleccionado] = useState(null);
 
+  const insets = useSafeAreaInsets();
+  const espacioInferior = Math.max(insets.bottom, 18);
+
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName = 'ellipse';
+        headerShown: false,
+
+        tabBarIcon: ({ focused, color }) => {
+          let iconName = 'ellipse-outline';
 
           if (route.name === 'Inicio') {
             iconName = focused ? 'home' : 'home-outline';
@@ -27,32 +34,35 @@ function TabsPrincipales() {
             iconName = focused ? 'volume-high' : 'volume-high-outline';
           } else if (route.name === 'Nombre') {
             iconName = focused ? 'create' : 'create-outline';
+          } else if (route.name === 'Colorear') {
+            iconName = focused ? 'color-palette' : 'color-palette-outline';
           }
 
-          return <Ionicons name={iconName} size={size} color={color} />;
+          return <Ionicons name={iconName} size={26} color={color} />;
         },
 
-        tabBarActiveTintColor: '#F5A623',
-        tabBarInactiveTintColor: '#BBBBBB',
+        tabBarActiveTintColor: 'green',
+        tabBarInactiveTintColor: 'gray',
 
-        headerShown: false,
+        tabBarShowLabel: false,
+        tabBarHideOnKeyboard: true,
 
         tabBarStyle: {
           backgroundColor: 'white',
-          height: 65,
-          paddingBottom: 8,
-          paddingTop: 6,
-          borderTopWidth: 0,
-          shadowColor: '#000',
-          shadowOpacity: 0.08,
-          shadowRadius: 8,
-          shadowOffset: { width: 0, height: -3 },
-          elevation: 10,
+          height: 62 + espacioInferior,
+          paddingTop: 8,
+          paddingBottom: espacioInferior,
+          borderTopWidth: 1,
+          borderTopColor: '#ddd',
         },
 
-        tabBarLabelStyle: {
-         fontSize: 12,
-          fontWeight: '600',
+        tabBarItemStyle: {
+          justifyContent: 'center',
+          alignItems: 'center',
+        },
+
+        tabBarIconStyle: {
+          marginTop: 4,
         },
       })}
     >
@@ -83,26 +93,33 @@ function TabsPrincipales() {
           />
         )}
       </Tab.Screen>
+
+      <Tab.Screen
+        name="Colorear"
+        component={ColorearScreen}
+      />
     </Tab.Navigator>
   );
 }
 
 export default function App() {
   return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="Bienvenida">
-        <Stack.Screen
-          name="Bienvenida"
-          component={BienvenidaScreen}
-          options={{ headerShown: false }}
-        />
+    <SafeAreaProvider>
+      <NavigationContainer>
+        <Stack.Navigator initialRouteName="Bienvenida">
+          <Stack.Screen
+            name="Bienvenida"
+            component={BienvenidaScreen}
+            options={{ headerShown: false }}
+          />
 
-        <Stack.Screen
-          name="Principal"
-          component={TabsPrincipales}
-          options={{ headerShown: false }}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+          <Stack.Screen
+            name="Principal"
+            component={TabsPrincipales}
+            options={{ headerShown: false }}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </SafeAreaProvider>
   );
 }
