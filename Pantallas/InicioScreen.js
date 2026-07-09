@@ -1,6 +1,15 @@
-import {Text,View,StyleSheet,TouchableOpacity,Image,ScrollView} from 'react-native';
-import { HABITATS } from '../data/animales';
-import { ANIMALES } from '../data/animales';
+import {Text,View,StyleSheet,TouchableOpacity,Image,ScrollView,ImageBackground} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { HABITATS,ANIMALES } from '../data/animales';
+//Colores utilizados para la aplicación
+const COLORES_HABITAT = {
+  sabana: { fondo: '#D7EFF9', texto: '#1a6a8a', boton: '#E2AD47' },
+  bosque: { fondo: '#E2AD47', texto: '#7a4a00', boton: '#9DCB3C' },
+  oceano: { fondo: '#9DCB3C', texto: '#3a5a00', boton: '#5A8400' },
+  granja: { fondo: '#5A8400', texto: '#ffffff', boton: '#9DCB3C' },
+};
+
+
 
 export default function InicioScreen({ navigation, setHabitatSeleccionado }) {
   function seleccionarHabitat(habitatId) {
@@ -12,147 +21,133 @@ export default function InicioScreen({ navigation, setHabitatSeleccionado }) {
     const lista = ANIMALES[habitatId];
     return lista && lista.length > 0 ? lista[0].imagen : null;
   }
+return (
+    <ImageBackground
+      source={require('../assets/FondoInicio.png')}
+      style={styles.fondo}
+      resizeMode="cover"
+    >
+      <SafeAreaView style={styles.safeArea}>
+        <ScrollView contentContainerStyle={styles.scroll}>
 
-  const colores = {
-    sabana: { fondo: '#FFF8E1', nombre: '#E6A800', sub: '#8B6914' },
-    bosque: { fondo: '#E8F5E9', nombre: '#2E7D52', sub: '#5A8A6A' },
-    oceano: { fondo: '#E3F2FD', nombre: '#1565C0', sub: '#5A82B0' },
-    granja: { fondo: '#F3E5F5', nombre: '#7B1FA2', sub: '#9C6AB0' },
-  };
+          {/* Logo */}
+          <Image
+            source={require('../assets/baner.png')}
+            style={styles.logo}
+          />
 
-  return (
-    // Fondo azul/turquesa como tu diseño original
-    <View style={styles.fondoAzul}>
-      <ScrollView contentContainerStyle={styles.scroll}>
-
-        {/* Logo grande */}
-        <Image
-          source={require('../assets/baner.png')}
-          style={styles.logo}
-        />
-
-        {/* Tarjeta blanca contenedora */}
-        <View style={styles.tarjetaContenedor}>
-          <Text style={styles.titulo}>¡Bienvenido!</Text>
-          <Text style={styles.subtitulo}>¿Qué hábitat quieres descubrir hoy?</Text>
-
-          {/* Grid 2x2 */}
-          <View style={styles.grid}>
+          {/* Lista de hábitats */}
+          <View style={styles.lista}>
             {HABITATS.map((habitat) => {
-              const color = colores[habitat.id] ?? { fondo: '#F5F5F5', nombre: '#333', sub: '#777' };
+              const color = COLORES_HABITAT[habitat.id] ?? {
+                fondo: '#D7EFF9',
+                texto: '#333',
+                boton: '#E2AD47',
+              };
               const imagen = imagenRepresentativa(habitat.id);
 
               return (
-                <TouchableOpacity
+                <View
                   key={habitat.id}
                   style={[styles.tarjeta, { backgroundColor: color.fondo }]}
-                  onPress={() => seleccionarHabitat(habitat.id)}
-                  activeOpacity={0.8}
                 >
+                  {/* Texto izquierda */}
+                  <View style={styles.tarjetaInfo}>
+                    <Text style={[styles.tarjetaNombre, { color: color.texto }]}>
+                      {habitat.nombre}
+                    </Text>
+                    <Text style={[styles.tarjetaDesc, { color: color.texto }]}>
+                      {habitat.descripcion}
+                    </Text>
+                    <TouchableOpacity
+                      style={[styles.botonJugar, { backgroundColor: color.boton }]}
+                      onPress={() => seleccionarHabitat(habitat.id)}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={styles.textoBotonJugar}>Jugar</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  {/* Imagen animal más grande */}
                   {imagen && (
                     <Image source={imagen} style={styles.imagenAnimal} />
                   )}
-                  <Text style={[styles.nombreHabitat, { color: color.nombre }]}>
-                    {habitat.nombre}
-                  </Text>
-                  <Text style={[styles.subHabitat, { color: color.sub }]}>
-                    {habitat.descripcion ?? 'Descúbrelo'}
-                  </Text>
-                </TouchableOpacity>
+                </View>
               );
             })}
           </View>
-        </View>
 
-      </ScrollView>
-    </View>
+        </ScrollView>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
-
 const styles = StyleSheet.create({
-  fondoAzul: {
+  fondo: {
     flex: 1,
-    backgroundColor: '#4DD9E8', // ← fondo turquesa como tu diseño
+  },
+  safeArea: {
+    flex: 1,
   },
   scroll: {
-    flexGrow: 1,
     alignItems: 'center',
     paddingBottom: 30,
   },
+  
+logo: {
+    width: 260,       // ← más grande
+    height: 250,
+    resizeMode: 'contain',
+    marginBottom:-20,
+  },
 
-  // ── Logo ────────────────────────────────────────────
-  logo: {
-    width: 400,       // ← más grande
+  lista: {
+    width: '92%',
+    gap: 14,
+  },
+
+  tarjeta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 22,
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 4,
+  },
+  tarjetaInfo: {
+    flex: 1,
+    justifyContent: 'center',
+    gap: 6,
+  },
+  tarjetaNombre: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  tarjetaDesc: {
+    fontSize: 13,
+    opacity: 0.85,
+  },
+  botonJugar: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 18,
+    paddingVertical: 6,
+    borderRadius: 20,
+    marginTop: 6,
+  },
+  textoBotonJugar: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  
+  imagenAnimal: {
+    width: 120,
     height: 120,
     resizeMode: 'contain',
-    marginTop: 30,
-    marginBottom: 20,
-  },
-
-  // ── Tarjeta blanca contenedora ───────────────────────
-  tarjetaContenedor: {
-    width: '92%',
-    backgroundColor: 'white',
-    borderRadius: 30,
-    padding: 20,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.12,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 6 },
-    elevation: 8,
-  },
-
-  titulo: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#222',
-    marginBottom: 4,
-  },
-  subtitulo: {
-    fontSize: 15,
-    color: '#E6A800',
-    fontWeight: '600',
-    textAlign: 'center',
-    marginBottom: 20,
-  },
-
-  // ── Grid ────────────────────────────────────────────
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: 14,
-    width: '100%',
-  },
-
-  // ── Tarjeta hábitat ──────────────────────────────────
-  tarjeta: {
-    width: '46%',
-    borderRadius: 22,
-    paddingVertical: 18,
-    paddingHorizontal: 10,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOpacity: 0.06,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 3,
-  },
-  imagenAnimal: {
-    width: 80,
-    height: 80,
-    resizeMode: 'contain',
-    marginBottom: 10,
-  },
-  nombreHabitat: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  subHabitat: {
-    fontSize: 12,
-    marginTop: 3,
-    textAlign: 'center',
-    color: '#888',
+    marginLeft: 10,
   },
 });

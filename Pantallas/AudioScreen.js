@@ -1,13 +1,23 @@
 import { useEffect, useState, useRef } from 'react';
-import {Text,View,StyleSheet,TouchableOpacity,Image,Modal}from 'react-native';
+import {  Text, View, StyleSheet, TouchableOpacity,  Image, Modal, ImageBackground} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAudioPlayer } from 'expo-audio';
+import { Ionicons } from '@expo/vector-icons';
+import ConfettiCannon from 'react-native-confetti-cannon';
 import { ANIMALES } from '../data/animales';
 
-export default function AudioScreen({ habitatSeleccionado, onVolverInicio, navigation }) {
+// Fondo por hábitat
+const FONDOS = {
+  sabana: require('../assets/sabana.jpg'),
+  bosque: require('../assets/bosque.jpg'),
+  oceano: require('../assets/oceano.jpg'),
+  granja: require('../assets/granja.jpg'),
+};
+
+export default function AudioScreen({ habitatSeleccionado, navigation }) {
   const animales = habitatSeleccionado ? ANIMALES[habitatSeleccionado] : [];
   const player = useAudioPlayer(null);
-  const montado = useRef(true);
+  const confettiRef = useRef(null);
 
   const [cola, setCola] = useState([]);
   const [pregunta, setPregunta] = useState(null);
@@ -17,15 +27,16 @@ export default function AudioScreen({ habitatSeleccionado, onVolverInicio, navig
   const [rondaCompleta, setRondaCompleta] = useState(false);
 
   useEffect(() => {
-    montado.current = true;
     return () => {
-      montado.current = false;
-      player.pause();
+      try { player.pause(); } catch (e) {}
     };
   }, []);
 
   useEffect(() => {
     if (animales.length > 0) iniciarRonda();
+    return () => {
+      try { player.pause(); } catch (e) {}
+    };
   }, [habitatSeleccionado]);
 
   function iniciarRonda() {
@@ -36,36 +47,50 @@ export default function AudioScreen({ habitatSeleccionado, onVolverInicio, navig
     setRondaCompleta(false);
     crearPregunta(ronda[0], animales);
   }
-
   function crearPregunta(animalMostrado, listaCompleta) {
-    const debeCoincidir = Math.random() < 0.5;
-    const otros = listaCompleta.filter(a => a.id !== animalMostrado.id);
-    const audioAnimal = debeCoincidir
-      ? animalMostrado
-      : otros[Math.floor(Math.random() * otros.length)];
-    setPregunta({ animalMostrado, audioAnimal });
-    player.replace(audioAnimal.audio); // solo carga, no reproduce
+  const otros = listaCompleta.filter(a => a.id !== animalMostrado.id);
+
+  let audioAnimal;
+
+  if (Math.random() < 0.65) {
+    audioAnimal = animalMostrado;
+  } else {
+    const disponibles = otros.filter(a => a.id !== pregunta?.audioAnimal?.id);
+
+    audioAnimal =
+      disponibles.length > 0
+        ? disponibles[Math.floor(Math.random() * disponibles.length)]
+        : otros[Math.floor(Math.random() * otros.length)];
   }
+
+  setPregunta({ animalMostrado, audioAnimal });
+
+  try {
+    player.replace(audioAnimal.audio);
+  } catch (e) {}
+}
 
   function reproducirAudio() {
     if (!pregunta) return;
-    player.seekTo(0);
-    player.play();
+    try { player.seekTo(0); player.play(); } catch (e) {}
   }
 
-  function verificar(respuestaUsuario) {
-    const coincide = pregunta.animalMostrado.id === pregunta.audioAnimal.id;
-    if (respuestaUsuario === coincide) {
-      setEncontrados(prev => prev + 1);
-      setMostrarExito(true);
-    } else {
-      player.pause();
-      setMostrarError(true);
-    }
+function verificar(respuestaUsuario) {
+  const coincide = pregunta.animalMostrado.id === pregunta.audioAnimal.id;
+
+  if (respuestaUsuario === coincide) {
+    setEncontrados(prev => prev + 1);
+    setMostrarExito(true);
+    setTimeout(() => confettiRef.current?.start(), 100);
+  } else {
+    try { player.pause(); } catch (e) {}
+    setMostrarError(true);
   }
+}
 
   function avanzar() {
-    player.pause();
+    try { player.pause(); } catch (e) {}
+    setMostrarExito(false);
     if (cola.length === 0) {
       setRondaCompleta(true);
     } else {
@@ -76,15 +101,18 @@ export default function AudioScreen({ habitatSeleccionado, onVolverInicio, navig
   }
 
   function handleVolverInicio() {
-    player.pause();
-    navigation.navigate('Inicio'); // ← usa navegación del tab
+    try { player.pause(); } catch (e) {}
+    navigation.navigate('Inicio');
   }
 
+  const fondo = FONDOS[habitatSeleccionado] ?? FONDOS.sabana;
+
+  // ── SIN HÁBITAT ─────────────────────────────────────
   if (!habitatSeleccionado) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.sinHabitat}>
-          <Text style={styles.emojiGrande}>🐾</Text>
+          <Ionicons name="paw" size={60} color="#E2AD47" />
           <Text style={styles.sinHabitatTexto}>
             Primero elige un hábitat en la pestaña Inicio
           </Text>
@@ -93,123 +121,186 @@ export default function AudioScreen({ habitatSeleccionado, onVolverInicio, navig
     );
   }
 
+  // ── RONDA COMPLETA ───────────────────────────────────
   if (rondaCompleta) {
     return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.centrador}>
-          <View style={styles.tarjetaJuego}>
-            <Text style={styles.emojiGrande}>🏆</Text>
-            <Text style={styles.titulo}>¡Ronda completa!</Text>
-            <Text style={styles.subtitulo}>
-              Encontraste {encontrados} de 5 animales
-            </Text>
-            <TouchableOpacity style={styles.botonAudio} onPress={iniciarRonda}>
-              <Text style={styles.textoBoton}>Jugar otra vez</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.botonVolverLink} onPress={handleVolverInicio}>
-              <Text style={styles.textoVolverLink}>Cambiar hábitat</Text>
-            </TouchableOpacity>
+      <ImageBackground source={fondo} style={styles.fondo} resizeMode="cover">
+        <SafeAreaView style={styles.safeArea}>
+          <View style={styles.centrador}>
+            <View style={styles.tarjetaJuego}>
+              <Image
+                source={require('../assets/trofeo.png')}
+                style={styles.imagenTrofeo}
+              />
+              <Text style={styles.tituloNaranja}>¡Ronda completada!</Text>
+              <Text style={styles.subtitulo}>
+                ¡Excelente trabajo!
+              </Text>
+
+              <TouchableOpacity
+                style={styles.botonVerde}
+                onPress={handleVolverInicio}
+              >
+                <Text style={styles.textoBoton}>Cambiar de hábitat</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.botonNaranja}
+                onPress={iniciarRonda}
+              >
+                <Text style={styles.textoBoton}>Jugar otra vez</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </SafeAreaView>
+        </SafeAreaView>
+      </ImageBackground>
     );
   }
 
   if (!pregunta) {
     return (
-      <SafeAreaView style={styles.container}>
-        <Text style={{ marginTop: 100 }}>Cargando...</Text>
-      </SafeAreaView>
+      <ImageBackground source={fondo} style={styles.fondo} resizeMode="cover">
+        <SafeAreaView style={styles.safeArea}>
+          <Text style={styles.cargando}>Cargando...</Text>
+        </SafeAreaView>
+      </ImageBackground>
     );
   }
 
+  // ── JUEGO PRINCIPAL ──────────────────────────────────
   return (
-    <SafeAreaView style={styles.container}>
+    <ImageBackground source={fondo} style={styles.fondo} resizeMode="cover">
+      <SafeAreaView style={styles.safeArea}>
 
-      {/* Botón volver — visible, debajo de la status bar */}
-      <View style={styles.headerRow}>
-        <TouchableOpacity style={styles.botonVolver} onPress={handleVolverInicio}>
-          <Text style={styles.textoVolver}>← Inicio</Text>
-        </TouchableOpacity>
-        <View style={styles.contadorBadge}>
-          <Text style={styles.contadorTexto}>⭐ {encontrados}/5</Text>
-        </View>
-      </View>
-
-      {/* Tarjeta centrada */}
-      <View style={styles.centrador}>
-        <View style={styles.tarjetaJuego}>
-          <Text style={styles.titulo}>Adivina el sonido</Text>
-          <Text style={styles.subtitulo}>¿Que sonido hace este animal?</Text>
-
-          <Image
-            source={pregunta.animalMostrado.imagen}
-            style={styles.imagenAnimal}
-          />
-          <Text style={styles.nombreAnimal}>
-            {pregunta.animalMostrado.nombre.toUpperCase()}
-          </Text>
-
-          <TouchableOpacity style={styles.botonAudio} onPress={reproducirAudio}>
-            <Text style={styles.textoBoton}>🔊 Escuchar sonido</Text>
+        {/* Header */}
+        <View style={styles.headerRow}>
+          <TouchableOpacity style={styles.botonVolver} onPress={handleVolverInicio}>
+            <Ionicons name="arrow-back" size={20} color="white" />
           </TouchableOpacity>
-
-          <View style={styles.filaBotones}>
-            <TouchableOpacity style={styles.botonSi} onPress={() => verificar(true)}>
-              <Text style={styles.textoBotonGrande}>✅</Text>
-              <Text style={styles.textoBotonColor}>Sí</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.botonNo} onPress={() => verificar(false)}>
-              <Text style={styles.textoBotonGrande}>❌</Text>
-              <Text style={styles.textoBotonColor}>No</Text>
-            </TouchableOpacity>
+          <View style={styles.contadorBadge}>
+            <Ionicons name="star" size={16} color="#FFD700" />
+            <Text style={styles.contadorTexto}> {encontrados}/5</Text>
           </View>
         </View>
-      </View>
 
-      {/* MODAL ÉXITO */}
-      <Modal visible={mostrarExito} transparent animationType="fade">
-        <View style={styles.modalFondo}>
-          <View style={styles.modal}>
-            <Text style={styles.emojiGrande}>🎉</Text>
+        {/* Tarjeta juego */}
+        <View style={styles.centrador}>
+          <View style={styles.tarjetaJuego}>
+            <Text style={styles.tituloNaranja}>Adivina el sonido</Text>
+            <Text style={styles.subtitulo}>¿Que sonido hace este animal?</Text>
+
+            <Text style={styles.nombreAnimal}>
+              {pregunta.animalMostrado.nombre}
+            </Text>
+
+            <Image
+              source={pregunta.animalMostrado.imagen}
+              style={styles.imagenAnimal}
+            />
+
+            {/* Botón escuchar */}
+            <TouchableOpacity style={styles.botonVerde} onPress={reproducirAudio}>
+              <Ionicons name="volume-high" size={20} color="white" />
+              <Text style={styles.textoBoton}>  Escuchar sonido</Text>
+            </TouchableOpacity>
+
+            {/* Botones Sí / No */}
+            <View style={styles.filaBotones}>
+              <TouchableOpacity
+                style={styles.botonSi}
+                onPress={() => verificar(true)}
+              >
+                <Ionicons name="checkmark" size={36} color="white" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.botonNo}
+                onPress={() => verificar(false)}
+              >
+                <Ionicons name="close" size={36} color="white" />
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+
+        {/* Confetis — se disparan al acertar */}
+        <ConfettiCannon
+          ref={confettiRef}
+          count={120}
+          origin={{ x: -10, y: 0 }}
+          autoStart={false}
+          fadeOut
+        />
+
+        {/* MODAL ÉXITO */}
+        <Modal visible={mostrarExito} transparent animationType="fade">
+          <View style={styles.modalFondo}>
+            <View style={styles.modal}>
             <Text style={styles.modalTitulo}>¡Muy bien!</Text>
-            <Text style={styles.modalTexto}>Encontraste a:</Text>
-            <Text style={styles.modalAnimal}>{pregunta.animalMostrado.nombre}</Text>
-            <TouchableOpacity
-              style={styles.botonAudio}
-              onPress={() => { setMostrarExito(false); avanzar(); }}
-            >
-              <Text style={styles.textoBoton}>Siguiente →</Text>
-            </TouchableOpacity>
+              <Text style={styles.modalTexto}>Respuesta correcta</Text>
+              <Text style={styles.modalAnimal}>
+                {pregunta.animalMostrado.nombre}
+              </Text>
+              <TouchableOpacity style={styles.botonVerde} onPress={avanzar}>
+                <Text style={styles.textoBoton}>Siguiente</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
-      </Modal>
+        </Modal>
 
-      {/* MODAL ERROR */}
-      <Modal visible={mostrarError} transparent animationType="fade">
-        <View style={styles.modalFondo}>
-          <View style={styles.modal}>
-            <Text style={styles.emojiGrande}>😊</Text>
-            <Text style={styles.modalTitulo}>Intenta nuevamente</Text>
-            <Text style={styles.modalTexto}>Escucha otra vez el sonido</Text>
-            <TouchableOpacity
-              style={styles.botonAudio}
-              onPress={() => { setMostrarError(false); reproducirAudio(); }}
-            >
-              <Text style={styles.textoBoton}>🔊 Escuchar</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      </Modal>
+        {/* MODAL ERROR */}
+        <Modal visible={mostrarError} transparent animationType="fade">
+          <View style={styles.modalFondo}>
+            <View style={styles.modal}>
 
-    </SafeAreaView>
+              <Image
+                source={require('../assets/denuevo.png')}
+                style={styles.imagenDenuevo}
+              />
+
+              <Text style={styles.modalTitulo}>
+                ¡Ups!
+              </Text>
+
+              <Text style={styles.modalTexto}>
+                Inténtalo de nuevo
+              </Text>
+
+              <TouchableOpacity
+                style={styles.botonVerde}
+                onPress={() => {
+                  setMostrarError(false);
+                  reproducirAudio();
+                }}
+              >
+                <Ionicons name="volume-high" size={18} color="white" />
+                <Text style={styles.textoBoton}> Escuchar otra vez</Text>
+              </TouchableOpacity>
+    </View>
+  </View>
+</Modal>
+
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
+  fondo: {
+    flex: 1,
+  },
+  safeArea: {
+    flex: 1,
+  },
   container: {
     flex: 1,
     backgroundColor: '#FBC531',
+  },
+  cargando: {
+    marginTop: 100,
+    textAlign: 'center',
+    fontSize: 18,
+    color: 'white',
   },
 
   // ── Sin hábitat ──────────────────────────────────────
@@ -222,35 +313,40 @@ const styles = StyleSheet.create({
   sinHabitatTexto: {
     fontSize: 18,
     textAlign: 'center',
-    color: 'white',
+    color: '#333',
     fontWeight: '600',
     marginTop: 16,
   },
 
-  // ── Header row ───────────────────────────────────────
+  // ── Header ───────────────────────────────────────────
   headerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 60,
+    paddingTop: 10,
     paddingBottom: 10,
   },
   botonVolver: {
-    backgroundColor: 'rgba(255,255,255,0.35)',
-    paddingHorizontal: 18,
-    paddingVertical: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     borderRadius: 22,
+    gap: 6,
   },
   textoVolver: {
     color: 'white',
     fontWeight: 'bold',
-    fontSize: 16,
+    fontSize: 15,
   },
   contadorBadge: {
-    backgroundColor: 'rgba(255,255,255,0.35)',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     borderRadius: 22,
   },
   contadorTexto: {
@@ -259,7 +355,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 
-  // ── Centrador vertical ───────────────────────────────
+  // ── Centrador ────────────────────────────────────────
   centrador: {
     flex: 1,
     justifyContent: 'center',
@@ -268,10 +364,10 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
 
-  // ── Tarjeta juego ────────────────────────────────────
+  // ── Tarjeta ──────────────────────────────────────────
   tarjetaJuego: {
     width: '100%',
-    backgroundColor: 'white',
+    backgroundColor: 'rgba(255,255,255,0.92)',
     borderRadius: 30,
     padding: 24,
     alignItems: 'center',
@@ -281,40 +377,59 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 },
     elevation: 8,
   },
-  titulo: {
+  tituloNaranja: {
     fontSize: 26,
     fontWeight: 'bold',
-    color: '#4DD9E8',
+    color: '#E2AD47',
     marginBottom: 4,
+    textAlign: 'center',
   },
   subtitulo: {
     fontSize: 14,
     color: '#888',
     textAlign: 'center',
-    marginBottom: 16,
-  },
-  imagenAnimal: {
-    width: 170,
-    height: 170,
-    resizeMode: 'contain',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   nombreAnimal: {
-    fontSize: 22,
+    fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 18,
+    color: '#E2AD47',
+    marginBottom: 6,
     letterSpacing: 1,
+  },
+  imagenAnimal: {
+    width: 160,
+    height: 160,
+    resizeMode: 'contain',
+    marginBottom: 16,
+  },
+  imagenTrofeo: {
+    width: 100,
+    height: 100,
+    resizeMode: 'contain',
+    marginBottom: 10,
   },
 
   // ── Botones ──────────────────────────────────────────
-  botonAudio: {
-    backgroundColor: '#4DD9E8',
+  botonVerde: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#9DCB3C',
     width: '100%',
     padding: 14,
     borderRadius: 18,
+    marginBottom: 10,
+  },
+  botonNaranja: {
+    flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 14,
+    justifyContent: 'center',
+    backgroundColor: '#E2AD47',
+    width: '100%',
+    padding: 14,
+    borderRadius: 18,
+    marginBottom: 10,
   },
   textoBoton: {
     color: 'white',
@@ -323,44 +438,25 @@ const styles = StyleSheet.create({
   },
   filaBotones: {
     flexDirection: 'row',
-    gap: 14,
+    gap: 16,
     width: '100%',
+    marginTop: 4,
   },
   botonSi: {
     flex: 1,
-    backgroundColor: '#E8F5E9',
+    backgroundColor: '#E2AD47',
     borderRadius: 18,
     padding: 16,
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#66BB6A',
+    justifyContent: 'center',
   },
   botonNo: {
     flex: 1,
-    backgroundColor: '#FFEBEE',
+    backgroundColor: '#E2AD47',
     borderRadius: 18,
     padding: 16,
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#EF5350',
-  },
-  textoBotonGrande: {
-    fontSize: 30,
-  },
-  textoBotonColor: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginTop: 4,
-  },
-  botonVolverLink: {
-    marginTop: 14,
-    padding: 8,
-  },
-  textoVolverLink: {
-    color: '#F5A623',
-    fontSize: 15,
-    fontWeight: '600',
+    justifyContent: 'center',
   },
 
   // ── Modales ──────────────────────────────────────────
@@ -376,26 +472,27 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     padding: 25,
     alignItems: 'center',
-  },
-  emojiGrande: {
-    fontSize: 65,
+    gap: 8,
   },
   modalTitulo: {
     fontSize: 26,
     fontWeight: 'bold',
-    marginTop: 10,
-    color: '#333',
+    color: '#E2AD47',
   },
   modalTexto: {
     fontSize: 16,
-    marginTop: 8,
-    textAlign: 'center',
     color: '#666',
+    textAlign: 'center',
   },
   modalAnimal: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#F5A623',
-    marginTop: 8,
+    color: '#E2AD47',
   },
+  imagenDenuevo: {
+  width: 90,
+  height: 90,
+  resizeMode: 'contain',
+  marginBottom: 10,
+},
 });

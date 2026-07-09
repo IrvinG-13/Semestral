@@ -2,22 +2,22 @@ export const HABITATS = [
   {
     id: 'sabana',
     nombre: 'Sabana',
-    descripción: 'Leones y más'
+    descripcion: 'Leones y más'
   },
   {
     id: 'bosque',
     nombre: 'Bosque',
-    descripción: 'Animales del bosque'
+    descripcion: 'Animales del bosque'
   },
   {
     id: 'oceano',
     nombre: 'Océano',
-    descripción: 'Vida marina'
+    descripcion: 'Vida marina'
   },
   {
     id: 'granja',
     nombre: 'Granja',
-    descripción: 'Animales de granja'
+    descripcion: 'Animales de granja'
   },
 ];
 
