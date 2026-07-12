@@ -33,7 +33,7 @@ const PROGRESO_INICIAL = {
 export default function AudioScreen({habitatSeleccionado,navigation,}) {
   // Obtiene los animales correspondientes al habitat seleccionado
   const animales = habitatSeleccionado
-    ? ANIMALES[habitatSeleccionado] ?? []:[];
+    ? ANIMALES[habitatSeleccionado] ?? [] : [];
 
   // Crea el reproductor utilizado para los sonidos de los animales
   const player = useAudioPlayer(null);
@@ -496,18 +496,6 @@ export default function AudioScreen({habitatSeleccionado,navigation,}) {
                 </Text>
               </Text>
 
-              <View style={styles.filaErrores}>
-                <Ionicons
-                  name="close-circle"
-                  size={22}
-                  color="#EF5350"
-                />
-
-                <Text style={styles.textoErrores}>
-                  Errores cometidos: {erroresRonda}
-                </Text>
-              </View>
-
               <TouchableOpacity
                 style={styles.botonVerde}
                 onPress={iniciarRonda}
@@ -590,13 +578,9 @@ export default function AudioScreen({habitatSeleccionado,navigation,}) {
           >
             <Ionicons
               name="arrow-back"
-              size={20}
+              size={23}
               color="white"
             />
-
-            <Text style={styles.textoVolver}>
-              Inicio
-            </Text>
           </TouchableOpacity>
 
           <View style={styles.contadorBadge}>
@@ -657,13 +641,9 @@ export default function AudioScreen({habitatSeleccionado,navigation,}) {
               >
                 <Ionicons
                   name="checkmark"
-                  size={38}
+                  size={42}
                   color="white"
                 />
-
-                <Text style={styles.textoRespuesta}>
-                  Sí
-                </Text>
               </TouchableOpacity>
 
               <TouchableOpacity
@@ -673,13 +653,9 @@ export default function AudioScreen({habitatSeleccionado,navigation,}) {
               >
                 <Ionicons
                   name="close"
-                  size={38}
+                  size={42}
                   color="white"
                 />
-
-                <Text style={styles.textoRespuesta}>
-                  No
-                </Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -703,13 +679,7 @@ export default function AudioScreen({habitatSeleccionado,navigation,}) {
         >
           <View style={styles.modalFondo}>
             <View style={styles.modal}>
-              <View style={styles.iconoExito}>
-                <Ionicons
-                  name="checkmark-done"
-                  size={54}
-                  color="white"
-                />
-              </View>
+              
 
               <Text style={styles.modalTitulo}>
                 ¡Muy bien!
@@ -850,19 +820,12 @@ const styles = StyleSheet.create({
   },
 
   botonVolver: {
-    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: 'rgba(0,0,0,0.28)',
-    paddingHorizontal: 14,
-    paddingVertical: 9,
+    width: 44,
+    height: 44,
     borderRadius: 22,
-  },
-
-  textoVolver: {
-    color: 'white',
-    fontWeight: 'bold',
-    fontSize: 15,
-    marginLeft: 6,
   },
 
   contadorBadge: {
@@ -932,24 +895,12 @@ const styles = StyleSheet.create({
     fontSize: 46,
     fontWeight: 'bold',
     color: '#E2AD47',
-    marginBottom: 8,
+    marginBottom: 20,
   },
 
   puntajeDeCinco: {
     fontSize: 26,
     color: '#888',
-  },
-
-  filaErrores: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 22,
-  },
-
-  textoErrores: {
-    fontSize: 15,
-    color: '#666',
-    marginLeft: 7,
   },
 
   nombreAnimal: {
@@ -1013,27 +964,20 @@ const styles = StyleSheet.create({
 
   botonSi: {
     flex: 1,
-    backgroundColor: '#66BB6A',
+    backgroundColor: '#ffaa00',
     borderRadius: 18,
-    padding: 16,
+    padding: 18,
     alignItems: 'center',
     justifyContent: 'center',
   },
 
   botonNo: {
     flex: 1,
-    backgroundColor: '#EF5350',
+    backgroundColor: '#ffaa00',
     borderRadius: 18,
-    padding: 16,
+    padding: 18,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-
-  textoRespuesta: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginTop: 2,
   },
 
   modalFondo: {

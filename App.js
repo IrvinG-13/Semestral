@@ -97,7 +97,7 @@ function TabsPrincipales() {
           );
         },
 
-        tabBarActiveTintColor: 'green',
+        tabBarActiveTintColor: 'orange',
         tabBarInactiveTintColor: 'gray',
 
         tabBarShowLabel: false,
@@ -128,13 +128,12 @@ function TabsPrincipales() {
         Recibe el habitat seleccionado y la funcion
         que permite cambiarlo.
       */}
-      <Tab.Screen name="Inicio">
+      <Tab.Screen name="Audio">
         {(props) => (
-          <InicioScreen
+          <AudioScreen
             {...props}
-            habitatSeleccionado={habitatSeleccionado}
-            setHabitatSeleccionado={
-              setHabitatSeleccionado
+            habitatSeleccionado={
+              habitatSeleccionado
             }
           />
         )}
@@ -146,12 +145,14 @@ function TabsPrincipales() {
         Recibe el habitat elegido previamente
         desde la pantalla Inicio.
       */}
-      <Tab.Screen name="Audio">
+      
+      <Tab.Screen name="Inicio">
         {(props) => (
-          <AudioScreen
+          <InicioScreen
             {...props}
-            habitatSeleccionado={
-              habitatSeleccionado
+            habitatSeleccionado={habitatSeleccionado}
+            setHabitatSeleccionado={
+              setHabitatSeleccionado
             }
           />
         )}

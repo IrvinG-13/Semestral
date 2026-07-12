@@ -13,7 +13,6 @@ const PROGRESO_INICIAL = {
   mejorPuntaje: 0,
   ultimoPuntaje: 0,
   totalPuntos: 0,
-  totalErrores: 0,
   ultimoHabitat: '',
 };
 
@@ -331,14 +330,6 @@ export default function ResumenScreen() {
                 fondoIcono="#E4F4EA"
                 valor={progreso.totalPuntos}
                 descripcion="Puntos totales"
-              />
-
-              <TarjetaDato
-                icono="close-circle"
-                colorIcono="#E74C3C"
-                fondoIcono="#FCE8E6"
-                valor={progreso.totalErrores}
-                descripcion="Errores"
               />
 
               <TarjetaDato
