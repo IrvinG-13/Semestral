@@ -1,20 +1,19 @@
+// Importa React y los hooks utilizados para manejar estados y efectos
 import React, { useEffect, useState } from 'react';
 
-import {
-  Text,
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  Image,
-  ScrollView,
-  ImageBackground,
-} from 'react-native';
+// Importa los componentes visuales utilizados en la pantalla
+import {Text,View,StyleSheet,TouchableOpacity,Image,ScrollView,ImageBackground,} from 'react-native';
 
+// Permite respetar las areas seguras del dispositivo
 import { SafeAreaView } from 'react-native-safe-area-context';
+
+// Permite recuperar datos guardados localmente
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
+// Importa la lista de habitats y animales
 import { HABITATS, ANIMALES } from '../data/animales';
 
+// Define los colores utilizados para cada habitat
 const COLORES_HABITAT = {
   sabana: {
     fondo: '#D7EFF9',
@@ -45,17 +44,32 @@ export default function InicioScreen({
   navigation,
   setHabitatSeleccionado,
 }) {
+  // Guarda el nombre del jugador para mostrarlo en la pantalla
   const [nombreJugador, setNombreJugador] = useState('');
 
+  /*
+    Se ejecuta una sola vez cuando la pantalla se abre.
+
+    Su funcion es cargar el nombre guardado
+    anteriormente en el dispositivo.
+  */
   useEffect(() => {
     cargarNombre();
   }, []);
 
+  /*
+    Recupera el nombre del jugador desde AsyncStorage.
+
+    Si existe un nombre guardado, actualiza el estado
+    nombreJugador.
+  */
   async function cargarNombre() {
     try {
+      // Busca el nombre utilizando la clave nombreJugador
       const nombreGuardado =
         await AsyncStorage.getItem('nombreJugador');
 
+      // Guarda el nombre recuperado dentro del estado
       if (nombreGuardado !== null) {
         setNombreJugador(nombreGuardado);
       }
@@ -67,37 +81,61 @@ export default function InicioScreen({
     }
   }
 
+  /*
+    Guarda el habitat seleccionado y navega
+    hacia la pantalla de Audio.
+  */
   function seleccionarHabitat(habitatId) {
+    // Guarda el identificador del habitat seleccionado
     setHabitatSeleccionado(habitatId);
+
+    // Abre la pantalla donde se juega con los sonidos
     navigation.navigate('Audio');
   }
 
+  /*
+    Obtiene una imagen representativa del habitat.
+
+    Se utiliza la imagen del primer animal
+    disponible en la lista correspondiente.
+  */
   function imagenRepresentativa(habitatId) {
+    // Busca la lista de animales del habitat
     const lista = ANIMALES[habitatId];
 
+    // Devuelve la imagen del primer animal si existe
     if (lista && lista.length > 0) {
       return lista[0].imagen;
     }
 
+    // Devuelve null si el habitat no tiene animales
     return null;
   }
 
   return (
+    // Imagen utilizada como fondo de la pantalla
     <ImageBackground
       source={require('../assets/FondoInicio.png')}
       style={styles.fondo}
       resizeMode="cover"
     >
+      {/* Evita que el contenido quede debajo de las barras del telefono */}
       <SafeAreaView style={styles.safeArea}>
+        {/*
+          Permite desplazar la pantalla verticalmente
+          cuando el contenido no cabe completo.
+        */}
         <ScrollView
           contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}
         >
+          {/* Logo principal de la aplicacion */}
           <Image
             source={require('../assets/baner.png')}
             style={styles.logo}
           />
 
+          {/* Mensaje de bienvenida personalizado */}
           <View style={styles.bienvenida}>
             <Text style={styles.tituloBienvenida}>
               {nombreJugador
@@ -110,8 +148,13 @@ export default function InicioScreen({
             </Text>
           </View>
 
+          {/* Lista de habitats disponibles */}
           <View style={styles.lista}>
             {HABITATS.map((habitat) => {
+              /*
+                Obtiene los colores correspondientes
+                al habitat actual.
+              */
               const color =
                 COLORES_HABITAT[habitat.id] ?? {
                   fondo: '#D7EFF9',
@@ -119,10 +162,15 @@ export default function InicioScreen({
                   boton: '#E2AD47',
                 };
 
+              /*
+                Obtiene la imagen que representara
+                visualmente al habitat.
+              */
               const imagen =
                 imagenRepresentativa(habitat.id);
 
               return (
+                // Tarjeta individual de cada habitat
                 <View
                   key={habitat.id}
                   style={[
@@ -132,6 +180,7 @@ export default function InicioScreen({
                     },
                   ]}
                 >
+                  {/* Nombre, descripcion y boton del habitat */}
                   <View style={styles.tarjetaInfo}>
                     <Text
                       style={[
@@ -156,6 +205,10 @@ export default function InicioScreen({
                         'Descubre nuevos animales'}
                     </Text>
 
+                    {/*
+                      Boton que selecciona el habitat
+                      y abre la pantalla de Audio.
+                    */}
                     <TouchableOpacity
                       style={[
                         styles.botonJugar,
@@ -174,6 +227,7 @@ export default function InicioScreen({
                     </TouchableOpacity>
                   </View>
 
+                  {/* Muestra la imagen si el habitat tiene animales */}
                   {imagen && (
                     <Image
                       source={imagen}

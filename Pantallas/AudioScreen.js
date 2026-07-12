@@ -1,14 +1,8 @@
+// Importa los hooks necesarios para manejar estados, efectos y referencias
 import { useEffect, useRef, useState } from 'react';
 
-import {
-  Text,
-  View,
-  StyleSheet,
-  TouchableOpacity,
-  Image,
-  Modal,
-  ImageBackground,
-} from 'react-native';
+// Importa los componentes visuales utilizados en la pantalla
+import {Text,View,StyleSheet,TouchableOpacity,Image,Modal,ImageBackground,} from 'react-native';
 
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAudioPlayer } from 'expo-audio';
@@ -18,6 +12,7 @@ import ConfettiCannon from 'react-native-confetti-cannon';
 
 import { ANIMALES } from '../data/animales';
 
+// Relaciona cada habitat con su imagen de fondo
 const FONDOS = {
   sabana: require('../assets/sabana.jpg'),
   bosque: require('../assets/bosque.jpg'),
@@ -25,6 +20,7 @@ const FONDOS = {
   granja: require('../assets/granja.jpg'),
 };
 
+// Estructura inicial utilizada cuando todavia no existe progreso guardado
 const PROGRESO_INICIAL = {
   rondasJugadas: 0,
   mejorPuntaje: 0,
@@ -34,33 +30,52 @@ const PROGRESO_INICIAL = {
   ultimoHabitat: '',
 };
 
-export default function AudioScreen({
-  habitatSeleccionado,
-  navigation,
-}) {
+export default function AudioScreen({habitatSeleccionado,navigation,}) {
+  // Obtiene los animales correspondientes al habitat seleccionado
   const animales = habitatSeleccionado
-    ? ANIMALES[habitatSeleccionado] ?? []
-    : [];
+    ? ANIMALES[habitatSeleccionado] ?? []:[];
 
+  // Crea el reproductor utilizado para los sonidos de los animales
   const player = useAudioPlayer(null);
 
+  // Referencia utilizada para iniciar el efecto de confeti
   const confettiRef = useRef(null);
+
+  // Indica si el usuario ya fallo en la pregunta actual
   const falloEnPreguntaRef = useRef(false);
+
+  // Evita que el usuario responda varias veces rapidamente
   const respuestaBloqueadaRef = useRef(false);
+
+  // Evita guardar dos veces el resultado de la misma ronda
   const rondaGuardadaRef = useRef(false);
 
+  // Cola de animales que faltan por mostrar durante la ronda
   const [cola, setCola] = useState([]);
+
+  // Contiene el animal mostrado y el animal del audio reproducido
   const [pregunta, setPregunta] = useState(null);
 
+  // Controlan la visibilidad de los mensajes de exito y error
   const [mostrarExito, setMostrarExito] = useState(false);
   const [mostrarError, setMostrarError] = useState(false);
 
+  // Cantidad de preguntas completadas durante la ronda
   const [encontrados, setEncontrados] = useState(0);
+
+  // Puntaje obtenido respondiendo correctamente al primer intento
   const [puntaje, setPuntaje] = useState(0);
+
+  // Cantidad de errores cometidos durante la ronda actual
   const [erroresRonda, setErroresRonda] = useState(0);
 
+  // Indica si las cinco preguntas de la ronda terminaron
   const [rondaCompleta, setRondaCompleta] = useState(false);
 
+  /*
+    Detiene el audio cuando el usuario sale de la pantalla
+    o cuando el componente deja de estar activo.
+  */
   useEffect(() => {
     return () => {
       try {
@@ -71,6 +86,10 @@ export default function AudioScreen({
     };
   }, []);
 
+  /*
+    Inicia una nueva ronda cada vez que cambia
+    el habitat seleccionado.
+  */
   useEffect(() => {
     if (animales.length > 0) {
       iniciarRonda();
@@ -87,6 +106,12 @@ export default function AudioScreen({
     };
   }, [habitatSeleccionado]);
 
+  /*
+    Prepara una nueva ronda.
+
+    Mezcla los animales, selecciona cinco y reinicia
+    el puntaje, los errores, los mensajes y las referencias.
+  */
   function iniciarRonda() {
     try {
       player.pause();
@@ -94,42 +119,62 @@ export default function AudioScreen({
       console.log('No se pudo detener el audio:', error);
     }
 
+    // Crea una copia mezclada de la lista de animales
     const mezclados = [...animales].sort(
       () => Math.random() - 0.5
     );
 
+    // Selecciona como maximo cinco animales para la ronda
     const ronda = mezclados.slice(0, 5);
 
+    // Detiene el proceso si no existen animales disponibles
     if (ronda.length === 0) {
       setPregunta(null);
       return;
     }
 
+    // Guarda los animales restantes dentro de la cola
     setCola(ronda.slice(1));
+
+    // Reinicia todos los contadores
     setEncontrados(0);
     setPuntaje(0);
     setErroresRonda(0);
 
+    // Cierra los mensajes y vuelve al modo de juego
     setMostrarExito(false);
     setMostrarError(false);
     setRondaCompleta(false);
 
+    // Reinicia los controles internos de la ronda
     falloEnPreguntaRef.current = false;
     respuestaBloqueadaRef.current = false;
     rondaGuardadaRef.current = false;
 
+    // Crea la primera pregunta de la ronda
     crearPregunta(ronda[0], animales);
   }
 
+  /*
+    Crea una pregunta utilizando un animal mostrado
+    y un sonido que puede coincidir o no con ese animal.
+  */
   function crearPregunta(animalMostrado, listaCompleta) {
+    // Obtiene todos los animales diferentes al animal mostrado
     const otrosAnimales = listaCompleta.filter(
       (animal) => animal.id !== animalMostrado.id
     );
 
+    // Por defecto utiliza el sonido correcto
     let audioAnimal = animalMostrado;
 
+    // Existe un 65 por ciento de posibilidad de que coincidan
     const debeCoincidir = Math.random() < 0.65;
 
+    /*
+      Cuando no deben coincidir, selecciona aleatoriamente
+      el sonido de otro animal.
+    */
     if (!debeCoincidir && otrosAnimales.length > 0) {
       const posicionAleatoria = Math.floor(
         Math.random() * otrosAnimales.length
@@ -138,14 +183,17 @@ export default function AudioScreen({
       audioAnimal = otrosAnimales[posicionAleatoria];
     }
 
+    // Reinicia los controles de la nueva pregunta
     falloEnPreguntaRef.current = false;
     respuestaBloqueadaRef.current = false;
 
+    // Guarda la imagen mostrada y el audio seleccionado
     setPregunta({
       animalMostrado,
       audioAnimal,
     });
 
+    // Carga el sonido dentro del reproductor
     try {
       player.replace(audioAnimal.audio);
     } catch (error) {
@@ -153,6 +201,10 @@ export default function AudioScreen({
     }
   }
 
+  /*
+    Reinicia el sonido desde el principio
+    y comienza su reproduccion.
+  */
   function reproducirAudio() {
     if (!pregunta) {
       return;
@@ -166,65 +218,97 @@ export default function AudioScreen({
     }
   }
 
+  /*
+    Compara la respuesta del usuario con la respuesta correcta.
+
+    respuestaUsuario recibe true cuando se presiona Si
+    y false cuando se presiona No.
+  */
   function verificar(respuestaUsuario) {
+    // Evita verificar si no existe pregunta o el boton esta bloqueado
     if (!pregunta || respuestaBloqueadaRef.current) {
       return;
     }
 
+    // Bloquea temporalmente los botones de respuesta
     respuestaBloqueadaRef.current = true;
 
+    // Comprueba si la imagen y el sonido pertenecen al mismo animal
     const coincide =
       pregunta.animalMostrado.id ===
       pregunta.audioAnimal.id;
 
+    // Compara la respuesta correcta con la respuesta del jugador
     const respuestaCorrecta =
       respuestaUsuario === coincide;
 
     if (respuestaCorrecta) {
+      // Aumenta la cantidad de preguntas completadas
       setEncontrados((cantidadAnterior) => {
         return cantidadAnterior + 1;
       });
 
+      /*
+        Solo suma un punto cuando el jugador responde
+        correctamente en el primer intento.
+      */
       if (!falloEnPreguntaRef.current) {
         setPuntaje((puntajeAnterior) => {
           return puntajeAnterior + 1;
         });
       }
 
+      // Detiene el sonido actual
       try {
         player.pause();
       } catch (error) {
         console.log('No se pudo detener el audio:', error);
       }
 
+      // Muestra el mensaje de respuesta correcta
       setMostrarExito(true);
 
+      // Inicia el efecto de confeti
       setTimeout(() => {
         confettiRef.current?.start();
       }, 100);
     } else {
+      // Registra que el jugador fallo en esta pregunta
       falloEnPreguntaRef.current = true;
 
+      // Aumenta la cantidad de errores de la ronda
       setErroresRonda((erroresAnteriores) => {
         return erroresAnteriores + 1;
       });
 
+      // Detiene el sonido actual
       try {
         player.pause();
       } catch (error) {
         console.log('No se pudo detener el audio:', error);
       }
 
+      // Muestra el mensaje para volver a intentarlo
       setMostrarError(true);
     }
   }
 
+  /*
+    Cierra el mensaje de error, desbloquea los botones
+    y reproduce nuevamente el sonido.
+  */
   function intentarNuevamente() {
     setMostrarError(false);
     respuestaBloqueadaRef.current = false;
     reproducirAudio();
   }
 
+  /*
+    Avanza hacia el siguiente animal de la cola.
+
+    Si la cola esta vacia, termina la ronda
+    y guarda el progreso.
+  */
   async function avanzar() {
     try {
       player.pause();
@@ -232,19 +316,28 @@ export default function AudioScreen({
       console.log('No se pudo detener el audio:', error);
     }
 
+    // Cierra el mensaje de respuesta correcta
     setMostrarExito(false);
 
+    // Finaliza la ronda cuando no quedan animales
     if (cola.length === 0) {
       await finalizarRonda();
       return;
     }
 
+    // Extrae el siguiente animal y conserva los restantes
     const [siguienteAnimal, ...animalesRestantes] = cola;
 
     setCola(animalesRestantes);
+
+    // Crea la siguiente pregunta
     crearPregunta(siguienteAnimal, animales);
   }
 
+  /*
+    Guarda el resultado una sola vez y cambia
+    la pantalla al resumen final de la ronda.
+  */
   async function finalizarRonda() {
     if (!rondaGuardadaRef.current) {
       rondaGuardadaRef.current = true;
@@ -258,20 +351,30 @@ export default function AudioScreen({
     setRondaCompleta(true);
   }
 
+  /*
+    Recupera el progreso anterior, agrega los resultados
+    de la nueva ronda y guarda todo en AsyncStorage.
+  */
   async function guardarProgreso(
     puntajeFinal,
     erroresFinales
   ) {
     try {
+      // Busca el progreso guardado anteriormente
       const progresoGuardado =
         await AsyncStorage.getItem(
           'progresoJugador'
         );
 
+      // Usa los valores iniciales cuando no existe progreso
       let progresoAnterior = PROGRESO_INICIAL;
 
       if (progresoGuardado) {
         try {
+          /*
+            Convierte el texto guardado en un objeto
+            y completa cualquier propiedad faltante.
+          */
           progresoAnterior = {
             ...PROGRESO_INICIAL,
             ...JSON.parse(progresoGuardado),
@@ -283,6 +386,7 @@ export default function AudioScreen({
         }
       }
 
+      // Construye el nuevo progreso acumulado
       const nuevoProgreso = {
         rondasJugadas:
           progresoAnterior.rondasJugadas + 1,
@@ -305,6 +409,7 @@ export default function AudioScreen({
         ultimoHabitat: habitatSeleccionado,
       };
 
+      // Guarda el objeto convertido en texto
       await AsyncStorage.setItem(
         'progresoJugador',
         JSON.stringify(nuevoProgreso)
@@ -317,6 +422,9 @@ export default function AudioScreen({
     }
   }
 
+  /*
+    Detiene el audio y regresa a la pantalla Inicio.
+  */
   function handleVolverInicio() {
     try {
       player.pause();
@@ -327,9 +435,14 @@ export default function AudioScreen({
     navigation.navigate('Inicio');
   }
 
+  // Selecciona el fondo correspondiente al habitat actual
   const fondo =
     FONDOS[habitatSeleccionado] ?? FONDOS.sabana;
 
+  /*
+    Se muestra cuando el jugador entra a Audio
+    sin haber seleccionado primero un habitat.
+  */
   if (!habitatSeleccionado) {
     return (
       <SafeAreaView style={styles.containerSinHabitat}>
@@ -350,6 +463,9 @@ export default function AudioScreen({
     );
   }
 
+  /*
+    Se muestra al completar las cinco preguntas.
+  */
   if (rondaCompleta) {
     return (
       <ImageBackground
@@ -430,6 +546,9 @@ export default function AudioScreen({
     );
   }
 
+  /*
+    Se muestra mientras todavia no existe una pregunta.
+  */
   if (!pregunta) {
     return (
       <ImageBackground
@@ -454,6 +573,7 @@ export default function AudioScreen({
     );
   }
 
+  // Interfaz principal del juego
   return (
     <ImageBackground
       source={fondo}
@@ -461,6 +581,7 @@ export default function AudioScreen({
       resizeMode="cover"
     >
       <SafeAreaView style={styles.safeArea}>
+        {/* Encabezado con volver y contador */}
         <View style={styles.headerRow}>
           <TouchableOpacity
             style={styles.botonVolver}
@@ -491,6 +612,7 @@ export default function AudioScreen({
           </View>
         </View>
 
+        {/* Tarjeta principal de la pregunta */}
         <View style={styles.centrador}>
           <View style={styles.tarjetaJuego}>
             <Text style={styles.tituloNaranja}>
@@ -526,6 +648,7 @@ export default function AudioScreen({
               </Text>
             </TouchableOpacity>
 
+            {/* Botones para responder Si o No */}
             <View style={styles.filaBotones}>
               <TouchableOpacity
                 style={styles.botonSi}
@@ -562,6 +685,7 @@ export default function AudioScreen({
           </View>
         </View>
 
+        {/* Efecto visual mostrado al responder correctamente */}
         <ConfettiCannon
           ref={confettiRef}
           count={120}
@@ -570,6 +694,7 @@ export default function AudioScreen({
           fadeOut
         />
 
+        {/* Mensaje de respuesta correcta */}
         <Modal
           visible={mostrarExito}
           transparent
@@ -617,6 +742,7 @@ export default function AudioScreen({
           </View>
         </Modal>
 
+        {/* Mensaje mostrado cuando la respuesta es incorrecta */}
         <Modal
           visible={mostrarError}
           transparent
@@ -661,6 +787,7 @@ export default function AudioScreen({
   );
 }
 
+// Estilos visuales utilizados por la pantalla
 const styles = StyleSheet.create({
   fondo: {
     flex: 1,

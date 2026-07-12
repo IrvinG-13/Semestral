@@ -1,32 +1,52 @@
+// Lista de habitats disponibles en la aplicacion
 export const HABITATS = [
   {
+    // Identificador interno del habitat
     id: 'sabana',
+
+    // Nombre que se muestra en la pantalla
     nombre: 'Sabana',
-    descripcion: 'Leones y más'
+
+    // Descripcion breve del habitat
+    descripcion: 'Leones y más',
   },
   {
     id: 'bosque',
     nombre: 'Bosque',
-    descripcion: 'Animales del bosque'
+    descripcion: 'Animales del bosque',
   },
   {
     id: 'oceano',
     nombre: 'Océano',
-    descripcion: 'Vida marina'
+    descripcion: 'Vida marina',
   },
   {
     id: 'granja',
     nombre: 'Granja',
-    descripcion: 'Animales de granja'
+    descripcion: 'Animales de granja',
   },
 ];
 
+/*
+  Objeto que organiza los animales por habitat.
+
+  Cada propiedad del objeto corresponde al id
+  de uno de los habitats definidos anteriormente.
+*/
 export const ANIMALES = {
+  // Animales pertenecientes a la sabana
   sabana: [
     {
+      // Identificador unico del animal
       id: 'leon',
+
+      // Nombre que se muestra en la aplicacion
       nombre: 'LEON',
+
+      // Archivo de audio con el sonido del animal
       audio: require('../assets/audios/leon.mp3'),
+
+      // Imagen utilizada para representar al animal
       imagen: require('../assets/leon.png'),
     },
     {
@@ -55,7 +75,8 @@ export const ANIMALES = {
     },
   ],
 
-  bosque : [
+  // Animales pertenecientes al bosque
+  bosque: [
     {
       id: 'zorro',
       nombre: 'ZORRO',
@@ -80,7 +101,6 @@ export const ANIMALES = {
       audio: require('../assets/audios/ardilla.mp3'),
       imagen: require('../assets/ardilla.png'),
     },
-
     {
       id: 'pajaro',
       nombre: 'PÁJARO',
@@ -89,6 +109,7 @@ export const ANIMALES = {
     },
   ],
 
+  // Animales pertenecientes al oceano
   oceano: [
     {
       id: 'nutria',
@@ -96,7 +117,6 @@ export const ANIMALES = {
       audio: require('../assets/audios/nutria.mp3'),
       imagen: require('../assets/nutria.png'),
     },
-
     {
       id: 'ballena',
       nombre: 'BALLENA',
@@ -111,6 +131,7 @@ export const ANIMALES = {
     },
   ],
 
+  // Animales pertenecientes a la granja
   granja: [
     {
       id: 'vaca',

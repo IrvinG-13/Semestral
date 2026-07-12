@@ -1,11 +1,13 @@
 import { useCallback, useState } from 'react';
 import {Alert,ScrollView,StyleSheet,Text,TouchableOpacity,View,} from 'react-native';
-
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+// Importa los iconos utilizados en las tarjetas
 import { Ionicons } from '@expo/vector-icons';
 
+// Valores iniciales utilizados cuando no existe progreso guardado
 const PROGRESO_INICIAL = {
   rondasJugadas: 0,
   mejorPuntaje: 0,
@@ -15,6 +17,7 @@ const PROGRESO_INICIAL = {
   ultimoHabitat: '',
 };
 
+// Relaciona el identificador interno con el nombre visible del habitat
 const NOMBRES_HABITAT = {
   sabana: 'Sabana',
   bosque: 'Bosque',
@@ -22,6 +25,12 @@ const NOMBRES_HABITAT = {
   granja: 'Granja',
 };
 
+/*
+  Componente reutilizable para mostrar un dato del progreso.
+
+  Recibe un icono, sus colores, el valor que debe mostrar
+  y una descripcion.
+*/
 function TarjetaDato({
   icono,
   colorIcono,
@@ -32,6 +41,7 @@ function TarjetaDato({
 }) {
   return (
     <View style={styles.tarjeta}>
+      {/* Contenedor circular del icono */}
       <View
         style={[
           styles.iconoCircular,
@@ -47,6 +57,7 @@ function TarjetaDato({
         />
       </View>
 
+      {/* Valor principal de la tarjeta */}
       <Text
         style={[
           styles.numero,
@@ -57,6 +68,7 @@ function TarjetaDato({
         {valor}
       </Text>
 
+      {/* Descripcion del dato mostrado */}
       <Text style={styles.descripcion}>
         {descripcion}
       </Text>
@@ -65,23 +77,39 @@ function TarjetaDato({
 }
 
 export default function ResumenScreen() {
+  // Guarda el nombre del jugador
   const [nombreJugador, setNombreJugador] = useState('');
+
+  // Guarda todos los datos relacionados con el progreso
   const [progreso, setProgreso] = useState(PROGRESO_INICIAL);
 
+  /*
+    Se ejecuta cada vez que el usuario entra a esta pantalla.
+
+    Permite actualizar los datos aunque el jugador
+    haya terminado una nueva ronda recientemente.
+  */
   useFocusEffect(
     useCallback(() => {
       cargarProgreso();
     }, [])
   );
 
+  /*
+    Recupera el nombre y el progreso guardados
+    anteriormente en AsyncStorage.
+  */
   async function cargarProgreso() {
     try {
+      // Busca el nombre guardado del jugador
       const nombreGuardado =
         await AsyncStorage.getItem('nombreJugador');
 
+      // Busca el objeto que contiene el progreso
       const progresoGuardado =
         await AsyncStorage.getItem('progresoJugador');
 
+      // Actualiza el nombre si existe un valor guardado
       if (nombreGuardado) {
         setNombreJugador(nombreGuardado);
       } else {
@@ -89,13 +117,24 @@ export default function ResumenScreen() {
       }
 
       if (progresoGuardado) {
+        /*
+          Convierte el texto almacenado en un objeto
+          de JavaScript.
+        */
         const datos = JSON.parse(progresoGuardado);
 
+        /*
+          Une los valores iniciales con los datos guardados.
+
+          Esto evita errores si alguna propiedad
+          no existe dentro del almacenamiento.
+        */
         setProgreso({
           ...PROGRESO_INICIAL,
           ...datos,
         });
       } else {
+        // Usa los valores iniciales si no hay progreso guardado
         setProgreso(PROGRESO_INICIAL);
       }
     } catch (error) {
@@ -106,6 +145,10 @@ export default function ResumenScreen() {
     }
   }
 
+  /*
+    Muestra una alerta para confirmar si el usuario
+    realmente desea borrar sus puntajes.
+  */
   function confirmarReinicio() {
     Alert.alert(
       'Reiniciar progreso',
@@ -124,14 +167,21 @@ export default function ResumenScreen() {
     );
   }
 
+  /*
+    Elimina el progreso guardado y restablece
+    todos los datos de la pantalla.
+  */
   async function reiniciarProgreso() {
     try {
+      // Elimina solamente los puntajes y resultados
       await AsyncStorage.removeItem(
         'progresoJugador'
       );
 
+      // Regresa los valores del progreso a cero
       setProgreso(PROGRESO_INICIAL);
 
+      // Informa que el proceso termino correctamente
       Alert.alert(
         'Progreso reiniciado',
         'Los puntajes fueron eliminados.'
@@ -144,6 +194,12 @@ export default function ResumenScreen() {
     }
   }
 
+  /*
+    Calcula el porcentaje general del jugador.
+
+    Cada ronda tiene cinco preguntas, por eso
+    se multiplica la cantidad de rondas por cinco.
+  */
   const porcentaje =
     progreso.rondasJugadas > 0
       ? Math.round(
@@ -153,6 +209,12 @@ export default function ResumenScreen() {
         )
       : 0;
 
+  /*
+    Obtiene el nombre visible del ultimo habitat.
+
+    Si no existe un habitat registrado,
+    muestra el texto Ninguno.
+  */
   const nombreHabitat =
     NOMBRES_HABITAT[progreso.ultimoHabitat] ||
     'Ninguno';
@@ -163,6 +225,7 @@ export default function ResumenScreen() {
         contentContainerStyle={styles.contenido}
         showsVerticalScrollIndicator={false}
       >
+        {/* Encabezado principal de la pantalla */}
         <View style={styles.encabezado}>
           <View style={styles.iconoEncabezado}>
             <Ionicons
@@ -177,6 +240,7 @@ export default function ResumenScreen() {
               Mi progreso
             </Text>
 
+            {/* Muestra un saludo personalizado */}
             <Text style={styles.saludo}>
               {nombreJugador
                 ? `Sigue aprendiendo, ${nombreJugador}`
@@ -185,6 +249,10 @@ export default function ResumenScreen() {
           </View>
         </View>
 
+        {/*
+          Si no hay rondas jugadas, muestra un mensaje
+          indicando que todavia no existen resultados.
+        */}
         {progreso.rondasJugadas === 0 ? (
           <View style={styles.sinProgreso}>
             <View style={styles.iconoSinProgreso}>
@@ -206,6 +274,7 @@ export default function ResumenScreen() {
           </View>
         ) : (
           <>
+            {/* Tarjeta principal con el mejor puntaje */}
             <View style={styles.tarjetaPrincipal}>
               <View style={styles.circuloTrofeo}>
                 <Ionicons
@@ -222,6 +291,7 @@ export default function ResumenScreen() {
 
                 <Text style={styles.numeroPrincipal}>
                   {progreso.mejorPuntaje}
+
                   <Text style={styles.numeroDeCinco}>
                     /5
                   </Text>
@@ -237,6 +307,7 @@ export default function ResumenScreen() {
               Resumen general
             </Text>
 
+            {/* Cuadricula con todos los datos del progreso */}
             <View style={styles.grid}>
               <TarjetaDato
                 icono="star"
@@ -288,6 +359,7 @@ export default function ResumenScreen() {
               />
             </View>
 
+            {/* Mensaje motivador para el jugador */}
             <View style={styles.consejo}>
               <Ionicons
                 name="bulb"
@@ -301,6 +373,7 @@ export default function ResumenScreen() {
               </Text>
             </View>
 
+            {/* Boton para eliminar los resultados guardados */}
             <TouchableOpacity
               style={styles.botonReiniciar}
               onPress={confirmarReinicio}
