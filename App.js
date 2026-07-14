@@ -12,7 +12,6 @@ import {SafeAreaProvider,useSafeAreaInsets,} from 'react-native-safe-area-contex
 import BienvenidaScreen from './Pantallas/BienvenidaScreen';
 import InicioScreen from './Pantallas/InicioScreen';
 import AudioScreen from './Pantallas/AudioScreen';
-import ColorearScreen from './Pantallas/ColorearScreen';
 import ResumenScreen from './Pantallas/ResumenScreen';
 
 // Crea el navegador inferior
@@ -157,12 +156,6 @@ function TabsPrincipales() {
           />
         )}
       </Tab.Screen>
-
-      {/* Pantalla para colorear animales */}
-      <Tab.Screen
-        name="Colorear"
-        component={ColorearScreen}
-      />
 
       {/* Pantalla que muestra el progreso del jugador */}
       <Tab.Screen
