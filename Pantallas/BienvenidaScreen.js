@@ -25,6 +25,30 @@ export default function BienvenidaScreen({ navigation }) {
   }, []);
 
   /*
+    Limpia el texto escrito por el usuario.
+
+    Solo permite letras, espacios, tildes y la letra ñ.
+    No permite numeros ni simbolos.
+  */
+  function limpiarNombre(texto) {
+    return texto.replace(
+      /[^a-zA-ZÁÉÍÓÚáéíóúÑñ\s]/g,
+      ''
+    );
+  }
+
+  /*
+    Controla lo que el usuario escribe en el campo.
+
+    Si intenta escribir numeros o simbolos,
+    estos se eliminan automaticamente.
+  */
+  function manejarCambioNombre(texto) {
+    const nombreLimpio = limpiarNombre(texto);
+    setNombre(nombreLimpio);
+  }
+
+  /*
     Recupera el nombre almacenado en AsyncStorage.
 
     Si existe un nombre guardado, lo coloca dentro
@@ -38,7 +62,7 @@ export default function BienvenidaScreen({ navigation }) {
 
       // Actualiza el estado si existe un nombre guardado
       if (nombreGuardado) {
-        setNombre(nombreGuardado);
+        setNombre(limpiarNombre(nombreGuardado));
       }
     } catch (error) {
       // Muestra el error en la consola si ocurre un problema
@@ -58,13 +82,23 @@ export default function BienvenidaScreen({ navigation }) {
       Elimina los espacios que puedan existir
       al inicio o al final del nombre.
     */
-    const nombreLimpio = nombre.trim();
+    const nombreLimpio = limpiarNombre(nombre).trim();
 
     // Impide continuar si el usuario no escribio un nombre
     if (nombreLimpio === '') {
       Alert.alert(
         'Nombre requerido',
         'Debes escribir tu nombre antes de jugar.'
+      );
+
+      return;
+    }
+
+    // Impide continuar si el nombre tiene menos de tres letras
+    if (nombreLimpio.length < 3) {
+      Alert.alert(
+        'Nombre muy corto',
+        'Escribe un nombre de al menos 3 letras.'
       );
 
       return;
@@ -161,12 +195,13 @@ export default function BienvenidaScreen({ navigation }) {
               <TextInput
                 style={styles.input}
                 value={nombre}
-                onChangeText={setNombre}
+                onChangeText={manejarCambioNombre}
                 placeholder="Tu nombre"
                 placeholderTextColor="#888"
                 maxLength={20}
                 autoCapitalize="words"
                 autoCorrect={false}
+                keyboardType="default"
                 returnKeyType="done"
                 onSubmitEditing={jugar}
               />
